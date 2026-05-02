@@ -2,7 +2,12 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -14,14 +19,16 @@ export default function Sidebar() {
 
   const handleNav = (path: string) => {
     router.push(path)
+    onClose?.()
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-brand">
         <img src="/logo.png" alt="Mafisere" style={{width:32,height:32,borderRadius:6,objectFit:'contain'}} />
         <div className="brand-text">Mafisere Admin<span>Omnia Group Ltd</span></div>
       </div>
+      <button className="sidebar-close" onClick={onClose}>×</button>
       <nav className="sidebar-nav">
         <div className="nav-label">Overview</div>
         <button

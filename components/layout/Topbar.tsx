@@ -13,7 +13,11 @@ const titles: Record<string, string> = {
   '/settings': 'Settings',
 }
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void
+}
+
+export default function Topbar({ onMenuClick }: TopbarProps) {
   const pathname = usePathname()
   const [date, setDate] = useState('')
 
@@ -32,7 +36,14 @@ export default function Topbar() {
 
   return (
     <div className="topbar">
-      <span className="topbar-title">{title}</span>
+      <div className="topbar-left">
+        <button className="menu-btn" onClick={onMenuClick}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+        </button>
+        <span className="topbar-title">{title}</span>
+      </div>
       <div className="topbar-right">
         <span className="topbar-date">{date}</span>
         <span className="admin-pill">Super Admin</span>
