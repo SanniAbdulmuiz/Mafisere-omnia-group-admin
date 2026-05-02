@@ -22,8 +22,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     onClose?.()
   }
 
+  const sidebarClass = 'sidebar' + (isOpen ? ' sidebar-open' : '')
+
   return (
-    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+    <aside className={sidebarClass}>
       <div className="sidebar-brand">
         <img src="/logo.png" alt="Mafisere" style={{width:32,height:32,borderRadius:6,objectFit:'contain'}} />
         <div className="brand-text">Mafisere Admin<span>Omnia Group Ltd</span></div>

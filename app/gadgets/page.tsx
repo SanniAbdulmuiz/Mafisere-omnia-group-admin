@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { uploadGadgetImage } from '@/lib/uploadImage'
+import { handleGadgetUpload } from '@/lib/uploadMedia'
 
 export default function GadgetsPage() {
   const [showModal, setShowModal] = useState(false)
@@ -18,6 +17,8 @@ export default function GadgetsPage() {
     description: ''
   })
   const [images, setImages] = useState<File[]>([])
+  const [video, setVideo] = useState<File | null>(null)
+  const [uploading, setUploading] = useState('')
 
   // Dummy data for the table - ensure this exists!
   const gadgets = [
@@ -38,37 +39,16 @@ export default function GadgetsPage() {
     }
 
     setLoading(true)
+    setUploading('')
     setMessage({ text: '', type: '' })
 
     try {
-      const imageUrls: string[] = []
-      if (images.length > 0) {
-        for (const file of images) {
-          const url = await uploadGadgetImage(file)
-          imageUrls.push(url)
-        }
-      }
-
-      // Inside handleSubmit...
-const { error } = await supabase.from('gadgets').insert([{
-  name: form.name.trim(),
-  category: form.category.toLowerCase(), // This is fine (db expects 'iphone', etc.)
-  
-  // FIX: Capitalize the first letter to match 'New' or 'Used'
-  condition: form.condition.charAt(0).toUpperCase() + form.condition.slice(1), 
-  
-  storage: form.storage || null,
-  price: parseFloat(form.price),
-  description: form.description || null,
-  images: imageUrls,
-  is_available: true
-}])
-
-      if (error) throw error
+      await handleGadgetUpload(form, images, video, (msg) => setUploading(msg))
 
       setMessage({ text: 'Gadget uploaded successfully!', type: 'success' })
       setForm({ name: '', category: 'iphone', condition: 'new', storage: '', price: '', description: '' })
       setImages([])
+      setVideo(null)
       
       setTimeout(() => {
         setShowModal(false)
@@ -76,19 +56,12 @@ const { error } = await supabase.from('gadgets').insert([{
       }, 2000)
 
     } catch (err: any) {
-      // This will force the console to show the internal properties
-      console.log("Full Error Object:", JSON.stringify(err, null, 2));
-      console.error("Supabase Detailed Error:", {
-        code: err.code,
-        message: err.message,
-        details: err.details,
-        hint: err.hint
-      });
-      
+      console.error('Upload error:', err)
+      const errorMsg = err?.message || err?.error?.message || 'Upload failed. Check console for details.'
       setMessage({ 
-        text: `Error (${err.code || 'Unknown'}): ${err.message || 'Check console'}`, 
+        text: errorMsg, 
         type: 'error' 
-      }); // Added semicolon here
+      })
     } finally { // The "}" before "finally" was missing
       setLoading(false);
     }
@@ -205,6 +178,14 @@ const { error } = await supabase.from('gadgets').insert([{
                 <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} />
                 {images.length > 0 && <p style={{fontSize:12,color:'#3b82f6',marginTop:6}}>{images.length} image(s) selected</p>}
               </div>
+
+              <div>
+                <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Product Video (Optional)</label>
+                <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} />
+                {video && <p style={{fontSize:12,color:'#3b82f6',marginTop:6}}>Selected: {video.name}</p>}
+              </div>
+
+              {uploading && <p style={{fontSize:12,color:'#3b82f6',marginTop:6}}>{uploading}</p>}
 
               <button onClick={handleSubmit} disabled={loading} className="sec-btn" style={{marginTop:10, width:'100%', padding: '12px', background: '#001f3f', color: 'white', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', border: 'none'}}>
                 {loading ? 'Uploading...' : 'Upload Gadget'}
