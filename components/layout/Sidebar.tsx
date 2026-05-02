@@ -23,7 +23,7 @@ export default function Sidebar() {
         <div className="brand-text">Mafisere Admin<span>Omnia Group Ltd</span></div>
       </div>
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Overview</div>
+        <div className="nav-label">Overview</div>
         <button
           className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
           onClick={() => handleNav('/dashboard')}
@@ -31,7 +31,7 @@ export default function Sidebar() {
           <span className="nav-icon">▦</span> Dashboard
         </button>
 
-        <div className="nav-section-label">Listings</div>
+        <div className="nav-label">Listings</div>
         <button
           className={`nav-item ${isActive('/gadgets') ? 'active' : ''}`}
           onClick={() => handleNav('/gadgets')}

@@ -41,12 +41,10 @@ export default function AdminLogin() {
         boxShadow: '0 8px 32px rgba(26,79,160,0.08)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: '50%',
-            background: '#1A4FA0', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', margin: '0 auto 14px',
-            fontSize: 22, fontWeight: 900, color: 'white', fontFamily: 'Georgia, serif'
-          }}>M</div>
+          <img src="/logo.png" alt="Mafisere" style={{
+            width: 52, height: 52, borderRadius: 10,
+            objectFit: 'contain', margin: '0 auto 14px'
+          }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0d1b2e', margin: 0 }}>
             Mafisere Admin
           </h1>
