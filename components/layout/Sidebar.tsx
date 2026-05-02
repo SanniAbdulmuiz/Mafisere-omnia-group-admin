@@ -19,7 +19,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-mark">M</div>
+        <img src="/logo.png" alt="Mafisere" style={{width:32,height:32,borderRadius:6,objectFit:'contain'}} />
         <div className="brand-text">Mafisere Admin<span>Omnia Group Ltd</span></div>
       </div>
       <nav className="sidebar-nav">
