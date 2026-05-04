@@ -6,7 +6,9 @@ import {
   DevicePhoneMobileIcon, 
   TruckIcon, 
   HomeIcon, 
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  UsersIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline'
 import ActivityChart from '@/components/ActivityChart'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -223,24 +225,34 @@ export default function Dashboard() {
         </div>
         <div className="quick-grid">
           <button className="qbtn" onClick={() => router.push('/gadgets')}>
-            <span className="qbtn-icon"><DevicePhoneMobileIcon className="w-5 h-5" style={{color: '#1A4FA0'}} /></span>
-            <span className="qbtn-label">Upload Gadget</span>
-            <div className="qbtn-sub">iPhone, tablet, accessory</div>
+            <span className="qbtn-icon" style={{background: '#eff6ff'}}><DevicePhoneMobileIcon className="w-5 h-5" style={{color: '#1A4FA0'}} /></span>
+            <span className="qbtn-label">Gadgets</span>
+            <div className="qbtn-sub">Upload device</div>
           </button>
           <button className="qbtn" onClick={() => router.push('/autos')}>
-            <span className="qbtn-icon"><TruckIcon className="w-5 h-5" style={{color: '#2e7d32'}} /></span>
-            <span className="qbtn-label">Upload Auto</span>
-            <div className="qbtn-sub">Add a car listing</div>
+            <span className="qbtn-icon" style={{background: '#ecfdf5'}}><TruckIcon className="w-5 h-5" style={{color: '#059669'}} /></span>
+            <span className="qbtn-label">Autos</span>
+            <div className="qbtn-sub">Add vehicle</div>
           </button>
           <button className="qbtn" onClick={() => router.push('/real-estate')}>
-            <span className="qbtn-icon"><HomeIcon className="w-5 h-5" style={{color: '#e65100'}} /></span>
-            <span className="qbtn-label">Upload Property</span>
-            <div className="qbtn-sub">Land or building</div>
+            <span className="qbtn-icon" style={{background: '#fff7ed'}}><HomeIcon className="w-5 h-5" style={{color: '#ea580c'}} /></span>
+            <span className="qbtn-label">Property</span>
+            <div className="qbtn-sub">List estate</div>
+          </button>
+          <button className="qbtn" onClick={() => router.push('/enquiries')}>
+            <span className="qbtn-icon" style={{background: '#fefce8'}}><EnvelopeIcon className="w-5 h-5" style={{color: '#ca8a04'}} /></span>
+            <span className="qbtn-label">Enquiries</span>
+            <div className="qbtn-sub">Messages</div>
+          </button>
+          <button className="qbtn" onClick={() => router.push('/users')}>
+            <span className="qbtn-icon" style={{background: '#f5f3ff'}}><UsersIcon className="w-5 h-5" style={{color: '#7c3aed'}} /></span>
+            <span className="qbtn-label">Users</span>
+            <div className="qbtn-sub">Manage staff</div>
           </button>
           <button className="qbtn" onClick={() => router.push('/settings')}>
-            <span className="qbtn-icon"><Cog6ToothIcon className="w-5 h-5" style={{color: '#5a6a85'}} /></span>
+            <span className="qbtn-icon" style={{background: '#f1f5f9'}}><Cog6ToothIcon className="w-5 h-5" style={{color: '#64748b'}} /></span>
             <span className="qbtn-label">Settings</span>
-            <div className="qbtn-sub">Update settings</div>
+            <div className="qbtn-sub">Configure</div>
           </button>
         </div>
       </div>

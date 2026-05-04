@@ -1,6 +1,16 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import { 
+  ChartPieIcon, 
+  DevicePhoneMobileIcon, 
+  TruckIcon, 
+  HomeIcon, 
+  EnvelopeIcon, 
+  UsersIcon, 
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon
+} from '@heroicons/react/24/outline'
 
 interface SidebarProps {
   isOpen?: boolean
@@ -37,7 +47,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
           onClick={() => handleNav('/dashboard')}
         >
-          <span className="nav-icon">▦</span> Dashboard
+          <ChartPieIcon className="w-5 h-5" /> Dashboard
         </button>
 
         <div className="nav-label">Listings</div>
@@ -45,19 +55,19 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           className={`nav-item ${isActive('/gadgets') ? 'active' : ''}`}
           onClick={() => handleNav('/gadgets')}
         >
-          <span className="nav-icon">📱</span> Gadgets
+          <DevicePhoneMobileIcon className="w-5 h-5" /> Gadgets
         </button>
         <button
           className={`nav-item ${isActive('/autos') ? 'active' : ''}`}
           onClick={() => handleNav('/autos')}
         >
-          <span className="nav-icon">🚗</span> Autos
+          <TruckIcon className="w-5 h-5" /> Autos
         </button>
         <button
           className={`nav-item ${isActive('/real-estate') ? 'active' : ''}`}
           onClick={() => handleNav('/real-estate')}
         >
-          <span className="nav-icon">🏘</span> Real Estate
+          <HomeIcon className="w-5 h-5" /> Real Estate
         </button>
 
         <div className="nav-label">Customers</div>
@@ -65,7 +75,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           className={`nav-item ${isActive('/enquiries') ? 'active' : ''}`}
           onClick={() => handleNav('/enquiries')}
         >
-          <span className="nav-icon">✉</span> Enquiries
+          <EnvelopeIcon className="w-5 h-5" /> Enquiries
           <span className="nav-badge">4</span>
         </button>
 
@@ -74,13 +84,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           className={`nav-item ${isActive('/users') ? 'active' : ''}`}
           onClick={() => handleNav('/users')}
         >
-          <span className="nav-icon">👥</span> Users
+          <UsersIcon className="w-5 h-5" /> Users
         </button>
         <button
           className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
           onClick={() => handleNav('/settings')}
         >
-          <span className="nav-icon">⚙</span> Settings
+          <Cog6ToothIcon className="w-5 h-5" /> Settings
         </button>
       </nav>
       <div className="sidebar-footer">
@@ -88,7 +98,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           sessionStorage.removeItem('admin_auth')
           router.push('/')
         }}>
-          <span className="nav-icon">⏻</span> Sign Out
+          <ArrowRightOnRectangleIcon className="w-5 h-5" /> Sign Out
         </button>
       </div>
     </aside>
