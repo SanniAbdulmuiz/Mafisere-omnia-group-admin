@@ -558,8 +558,9 @@ tr:last-child td {
 }
 
 .qbtn-icon {
-  font-size: 18px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 5px;
 }
 
@@ -848,7 +849,7 @@ tr:last-child td {
   }
 
   .quick-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .content {
@@ -881,10 +882,35 @@ tr:last-child td {
   .row-acts {
     flex-wrap: wrap;
   }
+
+  table th, table td {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  .enq-top {
+    gap: 8px;
+  }
+
+  .enq-name {
+    font-size: 11px;
+  }
+
+  .enq-time {
+    font-size: 9px;
+  }
+
+  .enq-msg {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 480px) {
   .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 

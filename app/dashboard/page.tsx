@@ -1,7 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { 
+  ChartBarIcon, 
+  DevicePhoneMobileIcon, 
+  TruckIcon, 
+  HomeIcon, 
+  Cog6ToothIcon
+} from '@heroicons/react/24/outline'
 import ActivityChart from '@/components/ActivityChart'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { getRecentListings, getListingStats } from '@/lib/fetchListings'
 
 type Listing = {
@@ -71,18 +79,16 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return (
-      <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'200px'}}>
-        <span style={{color:'var(--muted)'}}>Loading...</span>
-      </div>
-    )
+    return <LoadingSpinner message="Loading dashboard..." />
   }
 
   return (
     <div>
       <div className="stats-grid">
         <div className="stat-card stat-total">
-          <div className="stat-icon" style={{background:'#1A4FA0'}}>📊</div>
+          <div className="stat-icon" style={{background:'#1A4FA0'}}>
+            <ChartBarIcon className="w-5 h-5" style={{color: '#fff'}} />
+          </div>
           <div className="stat-info">
             <div className="stat-value">{stats?.total || 0}</div>
             <div className="stat-label">Total Listings</div>
@@ -90,7 +96,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="stat-card stat-gadgets">
-          <div className="stat-icon" style={{background:'#e8f0fb'}}>📱</div>
+          <div className="stat-icon" style={{background:'#e8f0fb'}}>
+            <DevicePhoneMobileIcon className="w-5 h-5" style={{color: '#1A4FA0'}} />
+          </div>
           <div className="stat-info">
             <div className="stat-value">{stats?.gadgets || 0}</div>
             <div className="stat-label">Gadgets</div>
@@ -98,7 +106,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="stat-card stat-autos">
-          <div className="stat-icon" style={{background:'#e8f5e9'}}>🚗</div>
+          <div className="stat-icon" style={{background:'#e8f5e9'}}>
+            <TruckIcon className="w-5 h-5" style={{color: '#2e7d32'}} />
+          </div>
           <div className="stat-info">
             <div className="stat-value">{stats?.autos || 0}</div>
             <div className="stat-label">Autos</div>
@@ -106,7 +116,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="stat-card stat-estate">
-          <div className="stat-icon" style={{background:'#fff8e1'}}>🏘</div>
+          <div className="stat-icon" style={{background:'#fff8e1'}}>
+            <HomeIcon className="w-5 h-5" style={{color: '#e65100'}} />
+          </div>
           <div className="stat-info">
             <div className="stat-value">{stats?.realEstate || 0}</div>
             <div className="stat-label">Real Estate</div>
@@ -155,7 +167,28 @@ export default function Dashboard() {
         <div className="card">
           <div className="sec-hdr">
             <span className="sec-title">Recent Enquiries</span>
-            <span style={{fontSize:11,color:'var(--blue)',cursor:'pointer'}} onClick={() => router.push('/enquiries')}>View all</span>
+            <button 
+              onClick={() => router.push('/enquiries')}
+              style={{
+                fontSize:11,
+                color:'var(--blue)',
+                cursor:'pointer',
+                background:'var(--blue-light)',
+                border:'none',
+                padding:'4px 10px',
+                borderRadius:4,
+                fontWeight:500,
+                display:'flex',
+                alignItems:'center',
+                gap:4,
+                fontFamily:'inherit'
+              }}
+            >
+              View all
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
           <div className="enq-item">
             <div className="enq-top">
@@ -190,19 +223,24 @@ export default function Dashboard() {
         </div>
         <div className="quick-grid">
           <button className="qbtn" onClick={() => router.push('/gadgets')}>
-            <span className="qbtn-icon">📱</span>
+            <span className="qbtn-icon"><DevicePhoneMobileIcon className="w-5 h-5" style={{color: '#1A4FA0'}} /></span>
             <span className="qbtn-label">Upload Gadget</span>
             <div className="qbtn-sub">iPhone, tablet, accessory</div>
           </button>
           <button className="qbtn" onClick={() => router.push('/autos')}>
-            <span className="qbtn-icon">🚗</span>
+            <span className="qbtn-icon"><TruckIcon className="w-5 h-5" style={{color: '#2e7d32'}} /></span>
             <span className="qbtn-label">Upload Auto</span>
             <div className="qbtn-sub">Add a car listing</div>
           </button>
           <button className="qbtn" onClick={() => router.push('/real-estate')}>
-            <span className="qbtn-icon">🏘</span>
+            <span className="qbtn-icon"><HomeIcon className="w-5 h-5" style={{color: '#e65100'}} /></span>
             <span className="qbtn-label">Upload Property</span>
             <div className="qbtn-sub">Land or building</div>
+          </button>
+          <button className="qbtn" onClick={() => router.push('/settings')}>
+            <span className="qbtn-icon"><Cog6ToothIcon className="w-5 h-5" style={{color: '#5a6a85'}} /></span>
+            <span className="qbtn-label">Settings</span>
+            <div className="qbtn-sub">Update settings</div>
           </button>
         </div>
       </div>

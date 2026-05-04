@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import LoadingSpinner from './LoadingSpinner'
 import { getActivityData } from '@/lib/fetchActivityData'
 
 const defaultData = [
@@ -33,8 +34,8 @@ export default function ActivityChart() {
 
   if (loading) {
     return (
-      <div className="card" style={{marginBottom: 16, height: 340, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-        <span style={{color: 'var(--muted)'}}>Loading activity data...</span>
+      <div className="card" style={{marginBottom: 16}}>
+        <LoadingSpinner message="Loading activity data..." />
       </div>
     )
   }
