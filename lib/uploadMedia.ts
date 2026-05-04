@@ -21,6 +21,48 @@ export async function uploadImage(file: File) {
   return data.publicUrl
 }
 
+export async function uploadAutoImage(file: File) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+  const filePath = `${fileName}`
+
+  const { error } = await supabase.storage
+    .from('auto-images')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+
+  if (error) throw error
+
+  const { data } = supabase.storage
+    .from('auto-images')
+    .getPublicUrl(filePath)
+
+  return data.publicUrl
+}
+
+export async function uploadPropertyImage(file: File) {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+  const filePath = `${fileName}`
+
+  const { error } = await supabase.storage
+    .from('property-images')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+
+  if (error) throw error
+
+  const { data } = supabase.storage
+    .from('property-images')
+    .getPublicUrl(filePath)
+
+  return data.publicUrl
+}
+
 export async function uploadVideoToCloudinary(file: File) {
   const formData = new FormData()
   formData.append('file', file)
@@ -87,6 +129,24 @@ export async function uploadMultipleImages(
     imageUrls.push(url)
   }
   
+  return imageUrls
+}
+
+export async function uploadMultipleAutoImages(files: File[]): Promise<string[]> {
+  const imageUrls: string[] = []
+  for (const file of files) {
+    const url = await uploadAutoImage(file)
+    imageUrls.push(url)
+  }
+  return imageUrls
+}
+
+export async function uploadMultiplePropertyImages(files: File[]): Promise<string[]> {
+  const imageUrls: string[] = []
+  for (const file of files) {
+    const url = await uploadPropertyImage(file)
+    imageUrls.push(url)
+  }
   return imageUrls
 }
 

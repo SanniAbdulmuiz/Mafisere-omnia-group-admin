@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { uploadImage, uploadMultipleImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
+import { uploadMultipleAutoImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface Auto {
   id: number
@@ -55,7 +56,7 @@ export default function AutosPage() {
     try {
       let imageUrls: string[] = []
       if (images.length > 0) {
-        imageUrls = await uploadMultipleImages(images)
+        imageUrls = await uploadMultipleAutoImages(images)
       }
 
       let videoUrl: string | null = null
@@ -112,7 +113,7 @@ export default function AutosPage() {
       </div>
       <div className="card" style={{overflowX: 'auto'}}>
         {loading ? (
-          <div style={{padding: 40, textAlign: 'center', color: '#666'}}>Loading...</div>
+          <LoadingSpinner message="Loading autos..." />
         ) : autos.length === 0 ? (
           <div style={{padding: 40, textAlign: 'center', color: '#666'}}>No autos listed yet</div>
         ) : (

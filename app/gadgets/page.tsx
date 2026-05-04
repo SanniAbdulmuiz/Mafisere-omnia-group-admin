@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { handleGadgetUpload } from '@/lib/uploadMedia'
 import { EllipsisVerticalIcon, PencilIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface Gadget {
   id: number
@@ -152,7 +153,7 @@ export default function GadgetsPage() {
 
       <div className="card" style={{marginTop: 20, overflowX: 'auto'}}>
         {loading ? (
-          <div style={{padding: 40, textAlign: 'center', color: '#666'}}>Loading...</div>
+          <LoadingSpinner message="Loading gadgets..." />
         ) : gadgets.length === 0 ? (
           <div style={{padding: 40, textAlign: 'center', color: '#666'}}>No gadgets listed yet</div>
         ) : (

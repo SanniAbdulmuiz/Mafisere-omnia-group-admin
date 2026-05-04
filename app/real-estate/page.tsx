@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { uploadImage, uploadMultipleImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
+import { uploadMultiplePropertyImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface Property {
   id: number
@@ -55,7 +56,7 @@ export default function RealEstatePage() {
     try {
       let imageUrls: string[] = []
       if (images.length > 0) {
-        imageUrls = await uploadMultipleImages(images)
+        imageUrls = await uploadMultiplePropertyImages(images)
       }
 
       let videoUrl: string | null = null
@@ -112,7 +113,7 @@ export default function RealEstatePage() {
       </div>
       <div className="card" style={{overflowX: 'auto'}}>
         {loading ? (
-          <div style={{padding: 40, textAlign: 'center', color: '#666'}}>Loading...</div>
+          <LoadingSpinner message="Loading properties..." />
         ) : properties.length === 0 ? (
           <div style={{padding: 40, textAlign: 'center', color: '#666'}}>No properties listed yet</div>
         ) : (
