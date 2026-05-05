@@ -63,28 +63,44 @@ export async function uploadPropertyImage(file: File) {
   return data.publicUrl
 }
 
-export async function uploadVideoToCloudinary(file: File) {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!)
+export async function uploadVideoToCloudinary(file: File, onProgress?: (percent: number) => void): Promise<{
+  url: string
+  public_id: string
+  duration: number
+  format: string
+}> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!)
 
-  const cloudRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`,
-    { method: 'POST', body: formData }
-  )
-  
-  const cloudData = await cloudRes.json()
-  
-  if (cloudData.error) {
-    throw new Error(cloudData.error.message)
-  }
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        const percent = Math.round((event.loaded / event.total) * 100)
+        onProgress(percent)
+      }
+    }
 
-  return {
-    url: cloudData.secure_url,
-    public_id: cloudData.public_id,
-    duration: Math.round(cloudData.duration || 0),
-    format: cloudData.format
-  }
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const cloudData = JSON.parse(xhr.responseText)
+        resolve({
+          url: cloudData.secure_url,
+          public_id: cloudData.public_id,
+          duration: Math.round(cloudData.duration || 0),
+          format: cloudData.format
+        })
+      } else {
+        const cloudData = JSON.parse(xhr.responseText)
+        reject(new Error(cloudData.error?.message || 'Upload failed'))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error('Upload failed'))
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`)
+    xhr.send(formData)
+  })
 }
 
 export async function saveVideoRecord(videoData: {
@@ -161,7 +177,8 @@ export async function handleGadgetUpload(
   },
   images: File[],
   video: File | null,
-  onProgress?: (message: string) => void
+  onProgress?: (message: string) => void,
+  onVideoProgress?: (percent: number) => void
 ) {
   let imageUrls: string[] = []
   
@@ -172,8 +189,8 @@ export async function handleGadgetUpload(
 
   let videoData: { url: string; public_id: string; duration: number; format: string } | null = null
   if (video) {
-    onProgress?.('Uploading video to Cloudinary...')
-    videoData = await uploadVideoToCloudinary(video)
+    onProgress?.('Uploading video...')
+    videoData = await uploadVideoToCloudinary(video, onVideoProgress)
     
     onProgress?.('Saving video record...')
     await saveVideoRecord({

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { uploadMultiplePropertyImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { EllipsisVerticalIcon, PencilIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface Property {
   id: number
@@ -28,6 +29,10 @@ export default function RealEstatePage() {
   const [video, setVideo] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'}>({text: '', type: 'success'})
+  const [uploading, setUploading] = useState('')
+  const [videoProgress, setVideoProgress] = useState(0)
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
   const [form, setForm] = useState({
     name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: ''
   })
@@ -105,11 +110,34 @@ export default function RealEstatePage() {
     fetchProperties()
   }
 
+  function openEditModal(prop: Property) {
+    setEditingProperty(prop)
+    setForm({
+      name: prop.name,
+      type: prop.type || 'House',
+      location: prop.location || '',
+      bedrooms: prop.bedrooms?.toString() || '',
+      bathrooms: prop.bathrooms?.toString() || '',
+      size: prop.size || '',
+      price: prop.price.toString(),
+      description: prop.description || ''
+    })
+    setShowModal(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingProperty(null)
+    setForm({ name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: '' })
+    setMessage({text: '', type: 'success'})
+    setVideoProgress(0)
+  }
+
   return (
     <div>
       <div className="sec-hdr">
         <span className="sec-title">Real Estate — All Listings</span>
-        <button className="sec-btn" onClick={() => setShowModal(true)}>+ Upload New Property</button>
+        <button className="sec-btn" onClick={() => { setShowModal(true); setEditingProperty(null); setMessage({text: '', type: 'success'}); setForm({ name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: '' }); setImages([]); setVideo(null); setVideoProgress(0); }}>+ Upload New Property</button>
       </div>
       <div className="card" style={{overflowX: 'auto'}}>
         {loading ? (
@@ -138,12 +166,41 @@ export default function RealEstatePage() {
                   <td>{p.bedrooms || '-'}</td>
                   <td>₦{p.price.toLocaleString()}</td>
                   <td><span className={`badge ${p.is_available ? 'b-live' : 'b-hidden'}`}>{p.is_available ? 'Live' : 'Hidden'}</span></td>
-                  <td>
-                    <div className="row-acts">
-                      <button className="abtn a-edit">Edit</button>
+                  <td style={{position: 'relative'}}>
+                    <button 
+                      className="mobile-menu-btn"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpenMenuId(openMenuId === p.id ? null : p.id) }}
+                      style={{background: 'none', border: 'none', cursor: 'pointer', padding: '4px'}}
+                    >
+                      <EllipsisVerticalIcon className="w-5 h-5" style={{color: '#6b7280'}} />
+                    </button>
+                    
+                    <div className="desktop-actions" style={{display: 'flex', gap: '8px'}}>
+                      <button className="abtn a-edit" onClick={() => openEditModal(p)}>Edit</button>
                       <button className="abtn a-tog" onClick={() => toggleStatus(p)}>{p.is_available ? 'Hide' : 'Show'}</button>
                       <button className="abtn a-del" onClick={() => deleteProperty(p.id)}>Del</button>
                     </div>
+
+                    {openMenuId === p.id && (
+                      <div className="action-dropdown" style={{
+                        position: 'absolute', right: 0, top: '100%', zIndex: 50,
+                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        minWidth: '140px', overflow: 'hidden', marginTop: '4px'
+                      }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => { openEditModal(p); setOpenMenuId(null) }} 
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
+                          <PencilIcon className="w-4 h-4" /> Edit
+                        </button>
+                        <button onClick={() => { toggleStatus(p); setOpenMenuId(null) }}
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
+                          <EyeIcon className="w-4 h-4" /> {p.is_available ? 'Mark Sold' : 'Mark Available'}
+                        </button>
+                        <button onClick={() => { deleteProperty(p.id); setOpenMenuId(null) }}
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#dc2626', fontWeight: 500}}>
+                          <TrashIcon className="w-4 h-4" /> Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -159,12 +216,13 @@ export default function RealEstatePage() {
           zIndex: 1000
         }} onClick={() => setShowModal(false)}>
           <div style={{
-            background: 'white', borderRadius: 12, padding: 20, width: '100%', maxWidth: 480,
-            maxHeight: '90vh', overflowY: 'auto', color: '#333', margin: '16px'
+            background: 'white', borderRadius: 16, padding: 16, width: '95%',
+            maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', color: '#333',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
           }} onClick={e => e.stopPropagation()}>
             
             <div style={{display:'flex', justifyContent:'space-between', marginBottom: 20}}>
-              <h2 style={{fontSize: 18, fontWeight: 600}}>Upload New Property</h2>
+              <h2 style={{fontSize: 18, fontWeight: 600}}>{editingProperty ? 'Edit Property' : 'Upload New Property'}</h2>
               <button onClick={() => setShowModal(false)} style={{border:'none',background:'none',fontSize:24,cursor:'pointer'}}>×</button>
             </div>
 
@@ -178,16 +236,16 @@ export default function RealEstatePage() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div style={{display:'flex',flexDirection:'column',gap:15}}>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Property Name *</label>
-                  <input name="name" placeholder="e.g. 3-Bed Terrace Lekki" value={form.name} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Property Name *</label>
+                  <input name="name" placeholder="e.g. 3-Bed Terrace Lekki" value={form.name} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Type *</label>
-                    <select name="type" value={form.type} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}}>
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Type *</label>
+                    <select name="type" value={form.type} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}}>
                       <option value="House">House</option>
                       <option value="Land">Land</option>
                       <option value="Commercial">Commercial</option>
@@ -195,53 +253,58 @@ export default function RealEstatePage() {
                     </select>
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Location *</label>
-                    <input name="location" placeholder="Lekki, Lagos" value={form.location} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Location *</label>
+                    <input name="location" placeholder="Lekki, Lagos" value={form.location} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Bedrooms</label>
-                    <input name="bedrooms" type="number" placeholder="3" value={form.bedrooms} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Bedrooms</label>
+                    <input name="bedrooms" type="number" placeholder="3" value={form.bedrooms} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Bathrooms</label>
-                    <input name="bathrooms" type="number" placeholder="3" value={form.bathrooms} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Bathrooms</label>
+                    <input name="bathrooms" type="number" placeholder="3" value={form.bathrooms} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Size</label>
-                    <input name="size" placeholder="500sqm" value={form.size} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Size</label>
+                    <input name="size" placeholder="500sqm" value={form.size} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Price (₦) *</label>
-                    <input name="price" type="number" placeholder="85000000" value={form.price} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Price (₦) *</label>
+                    <input name="price" type="number" placeholder="85000000" value={form.price} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Description</label>
-                  <textarea name="description" placeholder="Property description..." value={form.description} onChange={handleChange} rows={3} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd', resize:'vertical'}} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Description</label>
+                  <textarea name="description" placeholder="Property description..." value={form.description} onChange={handleChange} rows={3} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb', resize:'vertical'}} />
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Images</label>
-                  <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} />
-                  {images.length > 0 && <p style={{fontSize:12,color:'#3b82f6',marginTop:6}}>{images.length} image(s) selected</p>}
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Images</label>
+                  <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
+                    <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
+                    {images.length > 0 && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{images.length} image(s) selected</p>}
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Video (Optional)</label>
-                  <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video (Optional)</label>
+                  <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
+                    <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
+                    {video && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
+                  </div>
                 </div>
 
                 <button type="submit" disabled={saving} style={{
-                  padding: '12px', borderRadius: 8, border: 'none', background: '#1A4FA0',
-                  color: 'white', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.7 : 1
+                  marginTop: 8, width: '100%', padding: '14px', background: '#1A4FA0',
+                  color: 'white', borderRadius: '10px', cursor: saving ? 'not-allowed' : 'pointer',
+                  border: 'none', fontSize: 15, fontWeight: 600, boxShadow: '0 2px 8px rgba(26,79,160,0.3)'
                 }}>
                   {saving ? 'Uploading...' : 'Upload Property'}
                 </button>

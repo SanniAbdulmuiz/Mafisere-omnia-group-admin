@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { uploadMultipleAutoImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { EllipsisVerticalIcon, PencilIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface Auto {
   id: number
@@ -28,6 +29,10 @@ export default function AutosPage() {
   const [video, setVideo] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'}>({text: '', type: 'success'})
+  const [uploading, setUploading] = useState('')
+  const [videoProgress, setVideoProgress] = useState(0)
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+  const [editingAuto, setEditingAuto] = useState<Auto | null>(null)
   const [form, setForm] = useState({
     name: '', make: '', model: '', year: '', condition: 'Foreign', mileage: '', price: '', description: ''
   })
@@ -61,32 +66,50 @@ export default function AutosPage() {
 
       let videoUrl: string | null = null
       if (video) {
-        const videoData = await uploadVideoToCloudinary(video)
+        setUploading('Uploading video...')
+        const videoData = await uploadVideoToCloudinary(video, (percent) => setVideoProgress(percent))
         videoUrl = videoData.url
       }
 
-      const { error } = await supabase.from('autos').insert([{
-        name: form.name.trim(),
-        make: form.make.trim(),
-        model: form.model.trim() || null,
-        year: parseInt(form.year) || null,
-        condition: form.condition,
-        mileage: form.mileage || null,
-        price: parseFloat(form.price),
-        description: form.description || null,
-        images: imageUrls,
-        video_url: videoUrl,
-        is_available: true
-      }])
-
-      if (error) throw error
-
-      setMessage({ text: 'Auto uploaded successfully!', type: 'success' })
-      setForm({ name: '', make: '', model: '', year: '', condition: 'Foreign', mileage: '', price: '', description: '' })
-      setImages([])
-      setVideo(null)
-      setShowModal(false)
-      fetchAutos()
+      if (editingAuto) {
+        const { error } = await supabase.from('autos').update({
+          name: form.name.trim(),
+          make: form.make.trim(),
+          model: form.model.trim() || null,
+          year: parseInt(form.year) || null,
+          condition: form.condition,
+          mileage: form.mileage || null,
+          price: parseFloat(form.price),
+          description: form.description || null,
+          video_url: videoUrl || editingAuto.video_url
+        }).eq('id', editingAuto.id)
+        if (error) throw error
+        setMessage({ text: 'Auto updated successfully!', type: 'success' })
+      } else {
+        const { error } = await supabase.from('autos').insert([{
+          name: form.name.trim(),
+          make: form.make.trim(),
+          model: form.model.trim() || null,
+          year: parseInt(form.year) || null,
+          condition: form.condition,
+          mileage: form.mileage || null,
+          price: parseFloat(form.price),
+          description: form.description || null,
+          images: imageUrls,
+          video_url: videoUrl,
+          is_available: true
+        }])
+        if (error) throw error
+        setMessage({ text: 'Auto uploaded successfully!', type: 'success' })
+        setForm({ name: '', make: '', model: '', year: '', condition: 'Foreign', mileage: '', price: '', description: '' })
+        setImages([])
+        setVideo(null)
+      }
+      
+      setTimeout(() => {
+        closeModal()
+        fetchAutos()
+      }, 1500)
     } catch (err: any) {
       setMessage({ text: err.message || 'Upload failed', type: 'error' })
     } finally {
@@ -105,11 +128,34 @@ export default function AutosPage() {
     fetchAutos()
   }
 
+  function openEditModal(auto: Auto) {
+    setEditingAuto(auto)
+    setForm({
+      name: auto.name,
+      make: auto.make || '',
+      model: auto.model || '',
+      year: auto.year?.toString() || '',
+      condition: auto.condition || 'Foreign',
+      mileage: auto.mileage || '',
+      price: auto.price.toString(),
+      description: auto.description || ''
+    })
+    setShowModal(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingAuto(null)
+    setForm({ name: '', make: '', model: '', year: '', condition: 'Foreign', mileage: '', price: '', description: '' })
+    setMessage({text: '', type: 'success'})
+    setVideoProgress(0)
+  }
+
   return (
     <div>
       <div className="sec-hdr">
         <span className="sec-title">Autos — All Listings</span>
-        <button className="sec-btn" onClick={() => setShowModal(true)}>+ Upload New Auto</button>
+        <button className="sec-btn" onClick={() => { setShowModal(true); setEditingAuto(null); setMessage({text: '', type: 'success'}); setForm({ name: '', make: '', model: '', year: '', condition: 'Foreign', mileage: '', price: '', description: '' }); setImages([]); setVideo(null); setVideoProgress(0); }}>+ Upload New Auto</button>
       </div>
       <div className="card" style={{overflowX: 'auto'}}>
         {loading ? (
@@ -138,12 +184,41 @@ export default function AutosPage() {
                   <td><span className={`badge ${a.condition === 'Foreign' ? 'b-new' : 'b-used'}`}>{a.condition}</span></td>
                   <td>₦{a.price.toLocaleString()}</td>
                   <td><span className={`badge ${a.is_available ? 'b-live' : 'b-hidden'}`}>{a.is_available ? 'Live' : 'Hidden'}</span></td>
-                  <td>
-                    <div className="row-acts">
-                      <button className="abtn a-edit">Edit</button>
+                  <td style={{position: 'relative'}}>
+                    <button 
+                      className="mobile-menu-btn"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpenMenuId(openMenuId === a.id ? null : a.id) }}
+                      style={{background: 'none', border: 'none', cursor: 'pointer', padding: '4px'}}
+                    >
+                      <EllipsisVerticalIcon className="w-5 h-5" style={{color: '#6b7280'}} />
+                    </button>
+                    
+                    <div className="desktop-actions" style={{display: 'flex', gap: '8px'}}>
+                      <button className="abtn a-edit" onClick={() => openEditModal(a)}>Edit</button>
                       <button className="abtn a-tog" onClick={() => toggleStatus(a)}>{a.is_available ? 'Hide' : 'Show'}</button>
                       <button className="abtn a-del" onClick={() => deleteAuto(a.id)}>Del</button>
                     </div>
+
+                    {openMenuId === a.id && (
+                      <div className="action-dropdown" style={{
+                        position: 'absolute', right: 0, top: '100%', zIndex: 50,
+                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        minWidth: '140px', overflow: 'hidden', marginTop: '4px'
+                      }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => { openEditModal(a); setOpenMenuId(null) }} 
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
+                          <PencilIcon className="w-4 h-4" /> Edit
+                        </button>
+                        <button onClick={() => { toggleStatus(a); setOpenMenuId(null) }}
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
+                          <EyeIcon className="w-4 h-4" /> {a.is_available ? 'Mark Sold' : 'Mark Available'}
+                        </button>
+                        <button onClick={() => { deleteAuto(a.id); setOpenMenuId(null) }}
+                          style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#dc2626', fontWeight: 500}}>
+                          <TrashIcon className="w-4 h-4" /> Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -159,12 +234,13 @@ export default function AutosPage() {
           zIndex: 1000
         }} onClick={() => setShowModal(false)}>
           <div style={{
-            background: 'white', borderRadius: 12, padding: 20, width: '100%', maxWidth: 480,
-            maxHeight: '90vh', overflowY: 'auto', color: '#333', margin: '16px'
+            background: 'white', borderRadius: 16, padding: 16, width: '95%',
+            maxWidth: 440, maxHeight: '90vh', overflowY: 'auto', color: '#333',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
           }} onClick={e => e.stopPropagation()}>
             
             <div style={{display:'flex', justifyContent:'space-between', marginBottom: 20}}>
-              <h2 style={{fontSize: 18, fontWeight: 600}}>Upload New Auto</h2>
+              <h2 style={{fontSize: 18, fontWeight: 600}}>{editingAuto ? 'Edit Auto' : 'Upload New Auto'}</h2>
               <button onClick={() => setShowModal(false)} style={{border:'none',background:'none',fontSize:24,cursor:'pointer'}}>×</button>
             </div>
 
@@ -178,70 +254,87 @@ export default function AutosPage() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div style={{display:'flex',flexDirection:'column',gap:15}}>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Listing Name *</label>
-                  <input name="name" placeholder="e.g. Toyota Camry Full Option" value={form.name} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Listing Name *</label>
+                  <input name="name" placeholder="e.g. Toyota Camry Full Option" value={form.name} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Make *</label>
-                    <input name="make" placeholder="Toyota" value={form.make} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Make *</label>
+                    <input name="make" placeholder="Toyota" value={form.make} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Model</label>
-                    <input name="model" placeholder="Camry" value={form.model} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Model</label>
+                    <input name="model" placeholder="Camry" value={form.model} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Year</label>
-                    <input name="year" type="number" placeholder="2020" value={form.year} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Year</label>
+                    <input name="year" type="number" placeholder="2020" value={form.year} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Condition</label>
-                    <select name="condition" value={form.condition} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}}>
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Condition</label>
+                    <select name="condition" value={form.condition} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}}>
                       <option value="Foreign">Foreign</option>
                       <option value="Nigerian">Nigerian</option>
                     </select>
                   </div>
                 </div>
 
-                <div style={{display:'flex', gap: 10}}>
+                <div style={{display:'flex', gap: 8}}>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Mileage (km)</label>
-                    <input name="mileage" placeholder="50000" value={form.mileage} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Mileage (km)</label>
+                    <input name="mileage" placeholder="50000" value={form.mileage} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Price (₦) *</label>
-                    <input name="price" type="number" placeholder="18500000" value={form.price} onChange={handleChange} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}} />
+                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Price (₦) *</label>
+                    <input name="price" type="number" placeholder="18500000" value={form.price} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Description</label>
-                  <textarea name="description" placeholder="Additional details..." value={form.description} onChange={handleChange} rows={3} style={{width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid #ddd', resize:'vertical'}} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Description</label>
+                  <textarea name="description" placeholder="Additional details..." value={form.description} onChange={handleChange} rows={3} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb', resize:'vertical'}} />
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Images</label>
-                  <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} />
-                  {images.length > 0 && <p style={{fontSize:12,color:'#3b82f6',marginTop:6}}>{images.length} image(s) selected</p>}
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Images</label>
+                  <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
+                    <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
+                    {images.length > 0 && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{images.length} image(s) selected</p>}
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:12, marginBottom:5, fontWeight:500}}>Video (Optional)</label>
-                  <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} />
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video (Optional)</label>
+                  <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
+                    <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
+                    {video && !uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
+                  </div>
                 </div>
+
+                {videoProgress > 0 && videoProgress < 100 && (
+                  <div style={{marginTop: 8}}>
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:4}}>
+                      <span style={{fontSize:12, color:'#374151'}}>Uploading video...</span>
+                      <span style={{fontSize:12, color:'#1A4FA0', fontWeight:500}}>{videoProgress}%</span>
+                    </div>
+                    <div style={{width:'100%', height:6, background:'#e5e7eb', borderRadius:3, overflow:'hidden'}}>
+                      <div style={{width:`${videoProgress}%`, height:'100%', background:'#1A4FA0', borderRadius:3, transition:'width 0.3s'}} />
+                    </div>
+                  </div>
+                )}
 
                 <button type="submit" disabled={saving} style={{
-                  padding: '12px', borderRadius: 8, border: 'none', background: '#1A4FA0',
-                  color: 'white', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.7 : 1
+                  marginTop: 8, width: '100%', padding: '14px', background: '#1A4FA0',
+                  color: 'white', borderRadius: '10px', cursor: saving ? 'not-allowed' : 'pointer',
+                  border: 'none', fontSize: 15, fontWeight: 600, boxShadow: '0 2px 8px rgba(26,79,160,0.3)'
                 }}>
-                  {saving ? 'Uploading...' : 'Upload Auto'}
+                  {saving ? 'Saving...' : editingAuto ? 'Save Changes' : 'Upload Auto'}
                 </button>
               </div>
             </form>

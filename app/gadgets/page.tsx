@@ -40,6 +40,7 @@ export default function GadgetsPage() {
   const [images, setImages] = useState<File[]>([])
   const [video, setVideo] = useState<File | null>(null)
   const [uploading, setUploading] = useState('')
+  const [videoProgress, setVideoProgress] = useState(0)
 
   useEffect(() => { fetchGadgets() }, [])
 
@@ -93,6 +94,7 @@ export default function GadgetsPage() {
     setEditingGadget(null)
     setForm({ name: '', category: 'iphone', condition: 'new', storage: '', price: '', description: '' })
     setMessage({ text: '', type: '' })
+    setVideoProgress(0)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -123,7 +125,7 @@ export default function GadgetsPage() {
         if (error) throw error
         setMessage({ text: 'Gadget updated successfully!', type: 'success' })
       } else {
-        await handleGadgetUpload(form, images, video, (msg) => setUploading(msg))
+        await handleGadgetUpload(form, images, video, (msg) => setUploading(msg), (percent) => setVideoProgress(percent))
         setMessage({ text: 'Gadget uploaded successfully!', type: 'success' })
         setForm({ name: '', category: 'iphone', condition: 'new', storage: '', price: '', description: '' })
         setImages([])
@@ -302,11 +304,23 @@ export default function GadgetsPage() {
                 <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Product Video (Optional)</label>
                 <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
                   <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
-                  {video && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
+                  {video && !uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
                 </div>
               </div>
 
-              {uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:6, fontWeight:500}}>{uploading}</p>}
+              {videoProgress > 0 && videoProgress < 100 && (
+                <div style={{marginTop: 8}}>
+                  <div style={{display:'flex', justifyContent:'space-between', marginBottom:4}}>
+                    <span style={{fontSize:12, color:'#374151'}}>Uploading video...</span>
+                    <span style={{fontSize:12, color:'#1A4FA0', fontWeight:500}}>{videoProgress}%</span>
+                  </div>
+                  <div style={{width:'100%', height:6, background:'#e5e7eb', borderRadius:3, overflow:'hidden'}}>
+                    <div style={{width:`${videoProgress}%`, height:'100%', background:'#1A4FA0', borderRadius:3, transition:'width 0.3s'}} />
+                  </div>
+                </div>
+              )}
+
+              {uploading && !videoProgress && <p style={{fontSize:13,color:'#1A4FA0',marginTop:6, fontWeight:500}}>{uploading}</p>}
 
               <button onClick={handleSubmit} disabled={saving} style={{
                 marginTop: 8, width: '100%', padding: '14px', background: '#1A4FA0',
