@@ -178,7 +178,7 @@ export default function GadgetsPage() {
                   <td><span className="badge b-gadget">{g.category}</span></td>
                   <td><span className={`badge ${g.condition === 'New' ? 'b-new' : 'b-used'}`}>{g.condition === 'Used' ? 'UK Used' : g.condition}</span></td>
                   <td>{g.storage || '—'}</td>
-                  <td>₦{g.price.toLocaleString()}</td>
+                  <td>₦{g.price >= 1000000 ? (g.price / 1000000).toFixed(1) + 'M' : g.price.toLocaleString()}</td>
                   <td><span className={`badge ${g.is_available ? 'b-live' : 'b-hidden'}`}>{g.is_available ? 'Available' : 'Sold'}</span></td>
                   <td style={{position: 'relative'}}>
                     {/* Mobile: Kebab menu */}
@@ -263,6 +263,7 @@ export default function GadgetsPage() {
                   <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Category</label>
                   <select name="category" value={form.category} onChange={handleChange} className="form-select" style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}}>
                     <option value="iphone">iPhone</option>
+                    <option value="laptop">Laptop</option>
                     <option value="tablet">Tablet</option>
                     <option value="accessory">Accessory</option>
                   </select>
@@ -301,7 +302,7 @@ export default function GadgetsPage() {
               </div>
 
               <div>
-                <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Product Video (Optional)</label>
+                <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Product Video</label>
                 <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
                   <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
                   {video && !uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}

@@ -164,7 +164,7 @@ export default function RealEstatePage() {
                   <td><span className="badge b-estate">{p.type}</span></td>
                   <td>{p.location}</td>
                   <td>{p.bedrooms || '-'}</td>
-                  <td>₦{p.price.toLocaleString()}</td>
+                  <td>₦{p.price >= 1000000 ? (p.price / 1000000).toFixed(1) + 'M' : p.price.toLocaleString()}</td>
                   <td><span className={`badge ${p.is_available ? 'b-live' : 'b-hidden'}`}>{p.is_available ? 'Live' : 'Hidden'}</span></td>
                   <td style={{position: 'relative'}}>
                     <button 
@@ -294,7 +294,7 @@ export default function RealEstatePage() {
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video (Optional)</label>
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video</label>
                   <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
                     <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
                     {video && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}

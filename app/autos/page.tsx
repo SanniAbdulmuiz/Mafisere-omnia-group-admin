@@ -182,7 +182,7 @@ export default function AutosPage() {
                   <td>{a.year}</td>
                   <td>{a.make}</td>
                   <td><span className={`badge ${a.condition === 'Foreign' ? 'b-new' : 'b-used'}`}>{a.condition}</span></td>
-                  <td>₦{a.price.toLocaleString()}</td>
+                  <td>₦{a.price >= 1000000 ? (a.price / 1000000).toFixed(1) + 'M' : a.price.toLocaleString()}</td>
                   <td><span className={`badge ${a.is_available ? 'b-live' : 'b-hidden'}`}>{a.is_available ? 'Live' : 'Hidden'}</span></td>
                   <td style={{position: 'relative'}}>
                     <button 
@@ -310,7 +310,7 @@ export default function AutosPage() {
                 </div>
 
                 <div>
-                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video (Optional)</label>
+                  <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video</label>
                   <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
                     <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
                     {video && !uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
