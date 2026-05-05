@@ -39,6 +39,16 @@ export default function AutosPage() {
 
   useEffect(() => { fetchAutos() }, [])
 
+  useEffect(() => {
+    if (!openMenuId) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.action-dropdown')) setOpenMenuId(null)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openMenuId])
+
   async function fetchAutos() {
     const { data, error } = await supabase.from('autos').select('*').order('created_at', { ascending: false })
     if (!error && data) setAutos(data)
@@ -183,7 +193,7 @@ export default function AutosPage() {
                   <td>{a.make}</td>
                   <td><span className={`badge ${a.condition === 'Foreign' ? 'b-new' : 'b-used'}`}>{a.condition}</span></td>
                   <td>₦{a.price >= 1000000 ? (a.price / 1000000).toFixed(1) + 'M' : a.price.toLocaleString()}</td>
-                  <td><span className={`badge ${a.is_available ? 'b-live' : 'b-hidden'}`}>{a.is_available ? 'Live' : 'Hidden'}</span></td>
+                  <td><span className={`badge ${a.is_available ? 'b-live' : 'b-hidden'}`}>{a.is_available ? 'Available' : 'Sold'}</span></td>
                   <td style={{position: 'relative'}}>
                     <button 
                       className="mobile-menu-btn"
@@ -195,15 +205,17 @@ export default function AutosPage() {
                     
                     <div className="desktop-actions" style={{display: 'flex', gap: '8px'}}>
                       <button className="abtn a-edit" onClick={() => openEditModal(a)}>Edit</button>
-                      <button className="abtn a-tog" onClick={() => toggleStatus(a)}>{a.is_available ? 'Hide' : 'Show'}</button>
+                      <button className="abtn a-tog" onClick={() => toggleStatus(a)}>{a.is_available ? 'Mark Sold' : 'Mark Available'}</button>
                       <button className="abtn a-del" onClick={() => deleteAuto(a.id)}>Del</button>
                     </div>
 
                     {openMenuId === a.id && (
+                      <>
+                      <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999}} onClick={() => setOpenMenuId(null)} />
                       <div className="action-dropdown" style={{
-                        position: 'absolute', right: 0, top: '100%', zIndex: 50,
-                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        minWidth: '140px', overflow: 'hidden', marginTop: '4px'
+                        position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000,
+                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        minWidth: '160px', overflow: 'hidden', padding: '8px 0'
                       }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => { openEditModal(a); setOpenMenuId(null) }} 
                           style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
@@ -218,6 +230,7 @@ export default function AutosPage() {
                           <TrashIcon className="w-4 h-4" /> Delete
                         </button>
                       </div>
+                      </>
                     )}
                   </td>
                 </tr>

@@ -199,10 +199,12 @@ export default function GadgetsPage() {
 
                     {/* Dropdown menu */}
                     {openMenuId === g.id && (
+                      <>
+                      <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999}} onClick={() => setOpenMenuId(null)} />
                       <div className="action-dropdown" style={{
-                        position: 'absolute', right: 0, top: '100%', zIndex: 50,
-                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        minWidth: '140px', overflow: 'hidden', marginTop: '4px'
+                        position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000,
+                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        minWidth: '160px', overflow: 'hidden', padding: '8px 0'
                       }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => { openEditModal(g); setOpenMenuId(null) }} 
                           style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
@@ -217,6 +219,7 @@ export default function GadgetsPage() {
                           <TrashIcon className="w-4 h-4" /> Delete
                         </button>
                       </div>
+                      </>
                     )}
                   </td>
                 </tr>

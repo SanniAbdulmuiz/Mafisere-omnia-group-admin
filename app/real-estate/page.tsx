@@ -39,6 +39,16 @@ export default function RealEstatePage() {
 
   useEffect(() => { fetchProperties() }, [])
 
+  useEffect(() => {
+    if (!openMenuId) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('.action-dropdown')) setOpenMenuId(null)
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openMenuId])
+
   async function fetchProperties() {
     const { data, error } = await supabase.from('real_estate').select('*').order('created_at', { ascending: false })
     if (!error && data) setProperties(data)
@@ -165,7 +175,7 @@ export default function RealEstatePage() {
                   <td>{p.location}</td>
                   <td>{p.bedrooms || '-'}</td>
                   <td>₦{p.price >= 1000000 ? (p.price / 1000000).toFixed(1) + 'M' : p.price.toLocaleString()}</td>
-                  <td><span className={`badge ${p.is_available ? 'b-live' : 'b-hidden'}`}>{p.is_available ? 'Live' : 'Hidden'}</span></td>
+                  <td><span className={`badge ${p.is_available ? 'b-live' : 'b-hidden'}`}>{p.is_available ? 'Available' : 'Sold'}</span></td>
                   <td style={{position: 'relative'}}>
                     <button 
                       className="mobile-menu-btn"
@@ -177,15 +187,17 @@ export default function RealEstatePage() {
                     
                     <div className="desktop-actions" style={{display: 'flex', gap: '8px'}}>
                       <button className="abtn a-edit" onClick={() => openEditModal(p)}>Edit</button>
-                      <button className="abtn a-tog" onClick={() => toggleStatus(p)}>{p.is_available ? 'Hide' : 'Show'}</button>
+                      <button className="abtn a-tog" onClick={() => toggleStatus(p)}>{p.is_available ? 'Mark Sold' : 'Mark Available'}</button>
                       <button className="abtn a-del" onClick={() => deleteProperty(p.id)}>Del</button>
                     </div>
 
                     {openMenuId === p.id && (
+                      <>
+                      <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999}} onClick={() => setOpenMenuId(null)} />
                       <div className="action-dropdown" style={{
-                        position: 'absolute', right: 0, top: '100%', zIndex: 50,
-                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        minWidth: '140px', overflow: 'hidden', marginTop: '4px'
+                        position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000,
+                        background: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        minWidth: '160px', overflow: 'hidden', padding: '8px 0'
                       }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => { openEditModal(p); setOpenMenuId(null) }} 
                           style={{display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#374151', fontWeight: 500}}>
@@ -200,6 +212,7 @@ export default function RealEstatePage() {
                           <TrashIcon className="w-4 h-4" /> Delete
                         </button>
                       </div>
+                      </>
                     )}
                   </td>
                 </tr>
