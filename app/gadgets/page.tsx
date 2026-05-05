@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { handleGadgetUpload } from '@/lib/uploadMedia'
 import { EllipsisVerticalIcon, PencilIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
@@ -41,6 +41,8 @@ export default function GadgetsPage() {
   const [video, setVideo] = useState<File | null>(null)
   const [uploading, setUploading] = useState('')
   const [videoProgress, setVideoProgress] = useState(0)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchGadgets() }, [])
 
@@ -95,6 +97,10 @@ export default function GadgetsPage() {
     setForm({ name: '', category: 'iphone', condition: 'new', storage: '', price: '', description: '' })
     setMessage({ text: '', type: '' })
     setVideoProgress(0)
+    setImages([])
+    setVideo(null)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+    if (videoInputRef.current) videoInputRef.current.value = ''
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -299,7 +305,7 @@ export default function GadgetsPage() {
               <div>
                 <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Product Images</label>
                 <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
-                  <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
+                  <input ref={imageInputRef} type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
                   {images.length > 0 && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{images.length} image(s) selected</p>}
                 </div>
               </div>
@@ -307,7 +313,7 @@ export default function GadgetsPage() {
               <div>
                 <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Product Video</label>
                 <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
-                  <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
+                  <input ref={videoInputRef} type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
                   {video && !uploading && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
                 </div>
               </div>

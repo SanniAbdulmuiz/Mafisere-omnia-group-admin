@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { uploadMultiplePropertyImages, uploadVideoToCloudinary } from '@/lib/uploadMedia'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -12,8 +12,6 @@ interface Property {
   type: string
   location: string
   bedrooms: number | null
-  bathrooms: number | null
-  size: string | null
   price: number
   description: string | null
   images: string[]
@@ -31,10 +29,12 @@ export default function RealEstatePage() {
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'}>({text: '', type: 'success'})
   const [uploading, setUploading] = useState('')
   const [videoProgress, setVideoProgress] = useState(0)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
   const [openMenuId, setOpenMenuId] = useState<number | null>(null)
   const [editingProperty, setEditingProperty] = useState<Property | null>(null)
   const [form, setForm] = useState({
-    name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: ''
+    name: '', type: 'House', location: '', bedrooms: '', price: '', description: ''
   })
 
   useEffect(() => { fetchProperties() }, [])
@@ -85,8 +85,6 @@ export default function RealEstatePage() {
         type: form.type,
         location: form.location.trim(),
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
-        bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
-        size: form.size || null,
         price: parseFloat(form.price),
         description: form.description || null,
         images: imageUrls,
@@ -97,7 +95,7 @@ export default function RealEstatePage() {
       if (error) throw error
 
       setMessage({ text: 'Property uploaded successfully!', type: 'success' })
-      setForm({ name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: '' })
+      setForm({ name: '', type: 'House', location: '', bedrooms: '', price: '', description: '' })
       setImages([])
       setVideo(null)
       setShowModal(false)
@@ -127,8 +125,6 @@ export default function RealEstatePage() {
       type: prop.type || 'House',
       location: prop.location || '',
       bedrooms: prop.bedrooms?.toString() || '',
-      bathrooms: prop.bathrooms?.toString() || '',
-      size: prop.size || '',
       price: prop.price.toString(),
       description: prop.description || ''
     })
@@ -138,16 +134,20 @@ export default function RealEstatePage() {
   function closeModal() {
     setShowModal(false)
     setEditingProperty(null)
-    setForm({ name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: '' })
+    setForm({ name: '', type: 'House', location: '', bedrooms: '', price: '', description: '' })
     setMessage({text: '', type: 'success'})
     setVideoProgress(0)
+    setImages([])
+    setVideo(null)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+    if (videoInputRef.current) videoInputRef.current.value = ''
   }
 
   return (
     <div>
       <div className="sec-hdr">
         <span className="sec-title">Real Estate — All Listings</span>
-        <button className="sec-btn" onClick={() => { setShowModal(true); setEditingProperty(null); setMessage({text: '', type: 'success'}); setForm({ name: '', type: 'House', location: '', bedrooms: '', bathrooms: '', size: '', price: '', description: '' }); setImages([]); setVideo(null); setVideoProgress(0); }}>+ Upload New Property</button>
+        <button className="sec-btn" onClick={() => { setShowModal(true); setEditingProperty(null); setMessage({text: '', type: 'success'}); setForm({ name: '', type: 'House', location: '', bedrooms: '', price: '', description: '' }); setImages([]); setVideo(null); setVideoProgress(0); }}>+ Upload New Property</button>
       </div>
       <div className="card" style={{overflowX: 'auto'}}>
         {loading ? (
@@ -277,17 +277,6 @@ export default function RealEstatePage() {
                     <input name="bedrooms" type="number" placeholder="3" value={form.bedrooms} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
                   <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Bathrooms</label>
-                    <input name="bathrooms" type="number" placeholder="3" value={form.bathrooms} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
-                  </div>
-                </div>
-
-                <div style={{display:'flex', gap: 8}}>
-                  <div style={{flex: 1}}>
-                    <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Size</label>
-                    <input name="size" placeholder="500sqm" value={form.size} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
-                  </div>
-                  <div style={{flex: 1}}>
                     <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Price (₦) *</label>
                     <input name="price" type="number" placeholder="85000000" value={form.price} onChange={handleChange} style={{width:'100%', padding:'10px 12px', borderRadius:'8px', border:'1px solid #d1d5db', fontSize:14, background:'#f9fafb'}} />
                   </div>
@@ -301,7 +290,7 @@ export default function RealEstatePage() {
                 <div>
                   <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Images</label>
                   <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
-                    <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
+                    <input ref={imageInputRef} type="file" accept="image/*" multiple onChange={e => e.target.files && setImages(Array.from(e.target.files))} style={{fontSize:14}} />
                     {images.length > 0 && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{images.length} image(s) selected</p>}
                   </div>
                 </div>
@@ -309,7 +298,7 @@ export default function RealEstatePage() {
                 <div>
                   <label style={{display:'block', fontSize:13, marginBottom:4, fontWeight:500, color:'#374151'}}>Video</label>
                   <div style={{border:'2px dashed #d1d5db', borderRadius:8, padding:16, textAlign:'center', background:'#f9fafb'}}>
-                    <input type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
+                    <input ref={videoInputRef} type="file" accept="video/*" onChange={e => e.target.files && setVideo(e.target.files[0])} style={{fontSize:14}} />
                     {video && <p style={{fontSize:13,color:'#1A4FA0',marginTop:8, fontWeight:500}}>{video.name}</p>}
                   </div>
                 </div>
