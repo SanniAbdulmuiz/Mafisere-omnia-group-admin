@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
 type Listing = {
   id: string
@@ -10,7 +10,13 @@ type Listing = {
   type: 'gadget' | 'auto' | 'real_estate'
 }
 
+function getTimestamp(value: string) {
+  const hasTimezone = /(?:z|[+-]\d{2}:\d{2})$/i.test(value)
+  return new Date(hasTimezone ? value : `${value}Z`).getTime()
+}
+
 export async function getRecentListings(limit = 4) {
+  const supabase = getSupabaseAdmin()
   const [gadgets, autos, realEstate] = await Promise.all([
     supabase.from('gadgets').select('id, name, category, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
     supabase.from('autos').select('id, name, make, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
@@ -39,13 +45,14 @@ export async function getRecentListings(limit = 4) {
   ]
 
   const sorted = allListings
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => getTimestamp(b.created_at) - getTimestamp(a.created_at))
     .slice(0, limit)
 
   return sorted
 }
 
 export async function getListingStats() {
+  const supabase = getSupabaseAdmin()
   const [gadgets, autos, realEstate] = await Promise.all([
     supabase.from('gadgets').select('id, is_available'),
     supabase.from('autos').select('id, is_available'),

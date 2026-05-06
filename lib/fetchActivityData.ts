@@ -1,6 +1,7 @@
-import { supabase } from './supabase'
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function getActivityData() {
+  const supabase = getSupabaseAdmin()
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const today = new Date()
   const result: { day: string; gadgets: number; autos: number; realEstate: number }[] = []
