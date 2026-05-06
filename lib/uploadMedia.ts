@@ -103,26 +103,6 @@ export async function uploadVideoToCloudinary(file: File, onProgress?: (percent:
   })
 }
 
-export async function saveVideoRecord(videoData: {
-  url: string
-  public_id: string
-  duration: number
-  format: string
-  category: string
-  name: string
-}) {
-  const { error } = await supabase.from('videos').insert([{
-    url: videoData.url,
-    public_id: videoData.public_id,
-    duration: videoData.duration,
-    format: videoData.format,
-    category: videoData.category,
-    gadget_name: videoData.name
-  }])
-
-  if (error) throw error
-}
-
 export interface UploadProgress {
   current: number
   total: number
@@ -164,59 +144,4 @@ export async function uploadMultiplePropertyImages(files: File[]): Promise<strin
     imageUrls.push(url)
   }
   return imageUrls
-}
-
-export async function handleGadgetUpload(
-  form: {
-    name: string
-    category: string
-    condition: string
-    storage: string
-    price: string
-    description: string
-  },
-  images: File[],
-  video: File | null,
-  onProgress?: (message: string) => void,
-  onVideoProgress?: (percent: number) => void
-) {
-  let imageUrls: string[] = []
-  
-  if (images.length > 0) {
-    onProgress?.('Uploading images...')
-    imageUrls = await uploadMultipleImages(images)
-  }
-
-  let videoData: { url: string; public_id: string; duration: number; format: string } | null = null
-  if (video) {
-    onProgress?.('Uploading video...')
-    videoData = await uploadVideoToCloudinary(video, onVideoProgress)
-    
-    onProgress?.('Saving video record...')
-    await saveVideoRecord({
-      url: videoData.url,
-      public_id: videoData.public_id,
-      duration: videoData.duration,
-      format: videoData.format,
-      category: 'gadget',
-      name: form.name
-    })
-  }
-
-  onProgress?.('Saving gadget to database...')
-  const { error } = await supabase.from('gadgets').insert([{
-    name: form.name.trim(),
-    category: form.category.toLowerCase(),
-    condition: form.condition.charAt(0).toUpperCase() + form.condition.slice(1),
-    storage: form.storage || null,
-    price: parseFloat(form.price),
-    description: form.description || null,
-    images: imageUrls,
-    video_url: videoData?.url || null,
-    is_available: true
-  }])
-
-  if (error) throw error
-  
-  onProgress?.('')
 }

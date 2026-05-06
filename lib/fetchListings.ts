@@ -13,14 +13,29 @@ type Listing = {
 export async function getRecentListings(limit = 4) {
   const [gadgets, autos, realEstate] = await Promise.all([
     supabase.from('gadgets').select('id, name, category, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
-    supabase.from('autos').select('id, name, category, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
-    supabase.from('real_estate').select('id, name, category, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit)
+    supabase.from('autos').select('id, name, make, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
+    supabase.from('real_estate').select('id, name, type, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit)
   ])
 
   const allListings: Listing[] = [
-    ...(gadgets.data || []).map(g => ({ ...g, type: 'gadget' as const })),
-    ...(autos.data || []).map(a => ({ ...a, type: 'auto' as const })),
-    ...(realEstate.data || []).map(r => ({ ...r, type: 'real_estate' as const }))
+    ...(gadgets.data || []).map(g => ({
+      ...g,
+      id: String(g.id),
+      category: g.category,
+      type: 'gadget' as const
+    })),
+    ...(autos.data || []).map(a => ({
+      ...a,
+      id: String(a.id),
+      category: a.make,
+      type: 'auto' as const
+    })),
+    ...(realEstate.data || []).map(r => ({
+      ...r,
+      id: String(r.id),
+      category: r.type,
+      type: 'real_estate' as const
+    }))
   ]
 
   const sorted = allListings
