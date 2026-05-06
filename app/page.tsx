@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -41,8 +42,8 @@ export default function AdminLogin() {
         boxShadow: '0 8px 32px rgba(26,79,160,0.08)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/logo.png" alt="Mafisere" style={{
-            width: 52, height: 52, borderRadius: 10,
+          <Image src="/logo.png" alt="Mafisere" width={52} height={52} style={{
+            borderRadius: 10,
             objectFit: 'contain', margin: '0 auto 14px'
           }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0d1b2e', margin: 0 }}>
