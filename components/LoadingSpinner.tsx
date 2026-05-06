@@ -28,7 +28,7 @@ export default function LoadingSpinner({ message = 'Loading...' }: { message?: s
       <span style={{
         fontSize: '13px',
         color: '#5a6a85',
-        fontFamily: "'DM Sans', sans-serif"
+        fontFamily: 'inherit'
       }}>{message}</span>
     </div>
   )

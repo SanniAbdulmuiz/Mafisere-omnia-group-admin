@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import { 
   ChartPieIcon, 
@@ -37,7 +38,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   return (
     <aside className={sidebarClass}>
       <div className="sidebar-brand">
-        <img src="/logo.png" alt="Mafisere" style={{width:32,height:32,borderRadius:6,objectFit:'contain'}} />
+        <Image src="/logo.png" alt="Mafisere" width={32} height={32} style={{ borderRadius: 6, objectFit: 'contain' }} />
         <div className="brand-text">Mafisere Admin<span>Omnia Group Ltd</span></div>
       </div>
       <button className="sidebar-close" onClick={onClose}>×</button>

@@ -1,9 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import LoadingSpinner from './LoadingSpinner'
-import { getActivityData } from '@/lib/fetchActivityData'
 
 const defaultData = [
   { day: 'Mon', gadgets: 0, autos: 0, realEstate: 0 },
@@ -15,36 +12,20 @@ const defaultData = [
   { day: 'Sun', gadgets: 0, autos: 0, realEstate: 0 },
 ]
 
-export default function ActivityChart() {
-  const [data, setData] = useState(defaultData)
-  const [loading, setLoading] = useState(true)
+type ActivityPoint = {
+  day: string
+  gadgets: number
+  autos: number
+  realEstate: number
+}
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const activityData = await getActivityData()
-        setData(activityData)
-      } catch (error) {
-        console.error('Error fetching activity data:', error)
-      }
-      setLoading(false)
-    }
-    fetchData()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="card" style={{marginBottom: 16}}>
-        <LoadingSpinner message="Loading activity data..." />
-      </div>
-    )
-  }
+export default function ActivityChart({ data = defaultData }: { data?: ActivityPoint[] }) {
 
   return (
     <div className="card" style={{marginBottom: 16}}>
       <h3 className="sec-title" style={{marginBottom: 16}}>Inventory Upload Activity (Last 7 Days)</h3>
-      <div style={{width: '100%', height: 280}}>
-        <ResponsiveContainer>
+      <div style={{width: '100%'}}>
+        <ResponsiveContainer width="100%" height={280} minWidth={0}>
           <AreaChart data={data} margin={{top: 10, right: 20, left: 0, bottom: 0}}>
             <defs>
               <linearGradient id="colorGadgets" x1="0" y1="0" x2="0" y2="1">
