@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 const titles: Record<string, string> = {
@@ -19,18 +18,12 @@ interface TopbarProps {
 
 export default function Topbar({ onMenuClick }: TopbarProps) {
   const pathname = usePathname()
-  const [date, setDate] = useState('')
-
-  useEffect(() => {
-    setDate(
-      new Date().toLocaleDateString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    )
-  }, [])
+  const date = new Date().toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 
   const title = titles[pathname] || 'Dashboard'
 
