@@ -10,6 +10,16 @@ export type AdminActionResult = {
 }
 
 export async function saveBusinessSettings(settings: BusinessSettings): Promise<AdminActionResult> {
+  const email = settings.email?.trim() || ''
+
+  if (!settings.business_name?.trim()) {
+    return { success: false, message: 'Business name is required.' }
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, message: 'Enter a valid business email.' }
+  }
+
   const supabase = getSupabaseAdmin()
   const { error } = await supabase
     .from('business_settings')
@@ -18,7 +28,7 @@ export async function saveBusinessSettings(settings: BusinessSettings): Promise<
       business_name: settings.business_name?.trim() || '',
       phone_1: settings.phone_1?.trim() || '',
       phone_2: settings.phone_2?.trim() || '',
-      email: settings.email?.trim() || '',
+      email,
       address: settings.address?.trim() || '',
       show_enquiry_button: Boolean(settings.show_enquiry_button),
       whatsapp_chat_widget: Boolean(settings.whatsapp_chat_widget),
