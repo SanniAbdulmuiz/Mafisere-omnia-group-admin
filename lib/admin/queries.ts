@@ -27,6 +27,7 @@ export type BusinessSettings = {
   whatsapp_chat_widget?: boolean
   show_sold_items?: boolean
   maintenance_mode?: boolean
+  updated_at?: string
 }
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
