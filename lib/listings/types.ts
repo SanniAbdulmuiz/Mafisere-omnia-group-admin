@@ -1,9 +1,12 @@
+// The three categories supported by the shared ListingManager component.
 export type ListingKind = 'gadgets' | 'autos' | 'real-estate'
 
+// Common availability field shared by all listing tables.
 export type ListingStatus = {
   is_available: boolean
 }
 
+// Database shape for rows from the gadgets table.
 export type Gadget = ListingStatus & {
   id: number
   name: string
@@ -17,6 +20,7 @@ export type Gadget = ListingStatus & {
   created_at?: string
 }
 
+// Database shape for rows from the autos table.
 export type Auto = ListingStatus & {
   id: number
   name: string
@@ -32,6 +36,7 @@ export type Auto = ListingStatus & {
   created_at?: string
 }
 
+// Database shape for rows from the real_estate table.
 export type Property = ListingStatus & {
   id: number
   name: string
@@ -45,8 +50,10 @@ export type Property = ListingStatus & {
   created_at?: string
 }
 
+// Union type used anywhere code can receive any kind of listing.
 export type ListingRecord = Gadget | Auto | Property
 
+// Shared form state shape. Some fields are only used by certain listing kinds.
 export type ListingFormValues = {
   name: string
   category?: string
@@ -63,6 +70,7 @@ export type ListingFormValues = {
   description: string
 }
 
+// Cloudinary video metadata saved after upload.
 export type UploadedVideo = {
   url: string
   public_id: string
@@ -70,12 +78,14 @@ export type UploadedVideo = {
   format: string
 }
 
+// Payload sent from the client form to the saveListing server action.
 export type SaveListingPayload = {
   values: ListingFormValues
   imageUrls?: string[]
   video?: UploadedVideo | null
 }
 
+// Standard response shape returned by listing server actions.
 export type ActionResult = {
   success: boolean
   message: string
