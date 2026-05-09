@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
+// Dashboard-friendly shape that normalizes the three different listing tables.
 type Listing = {
   id: string
   name: string
@@ -11,11 +12,13 @@ type Listing = {
 }
 
 function getTimestamp(value: string) {
+  // Supabase timestamps may arrive without an explicit timezone; treat those as UTC.
   const hasTimezone = /(?:z|[+-]\d{2}:\d{2})$/i.test(value)
   return new Date(hasTimezone ? value : `${value}Z`).getTime()
 }
 
 export async function getRecentListings(limit = 4) {
+  // Fetch a small recent slice from each table in parallel for dashboard display.
   const supabase = getSupabaseAdmin()
   const [gadgets, autos, realEstate] = await Promise.all([
     supabase.from('gadgets').select('id, name, category, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit),
@@ -23,6 +26,7 @@ export async function getRecentListings(limit = 4) {
     supabase.from('real_estate').select('id, name, type, price, is_available, created_at').order('created_at', { ascending: false }).limit(limit)
   ])
 
+  // Convert category-specific rows into one common list item format.
   const allListings: Listing[] = [
     ...(gadgets.data || []).map(g => ({
       ...g,
@@ -44,6 +48,7 @@ export async function getRecentListings(limit = 4) {
     }))
   ]
 
+  // Sort across all listing types and keep only the newest overall records.
   const sorted = allListings
     .sort((a, b) => getTimestamp(b.created_at) - getTimestamp(a.created_at))
     .slice(0, limit)
@@ -52,6 +57,7 @@ export async function getRecentListings(limit = 4) {
 }
 
 export async function getListingStats() {
+  // Pull only fields needed to compute totals and availability counts.
   const supabase = getSupabaseAdmin()
   const [gadgets, autos, realEstate] = await Promise.all([
     supabase.from('gadgets').select('id, is_available'),
@@ -66,6 +72,7 @@ export async function getListingStats() {
   const estateCount = realEstate.data?.length || 0
   const estateAvailable = realEstate.data?.filter(r => r.is_available).length || 0
 
+  // Dashboard summary cards consume these aggregate numbers.
   return {
     total: gadgetsCount + autosCount + estateCount,
     gadgets: gadgetsCount,
